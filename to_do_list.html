@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Todo App - DOM Demo</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #001F3F;
+      color: #ffffff;
+    }
+
+    h1 {
+      color: #7FDBFF;
+      text-shadow: 0 0 10px #7FDBFF;
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    #todos {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .todo-card {
+      margin: 0.5rem 0;
+      padding: 1rem;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 2px solid #7FDBFF;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s;
+    }
+
+    .todo-card.done h4 {
+      text-decoration: line-through;
+      color: #7FDBFF;
+    }
+
+    .todo-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 15px rgba(127, 219, 255, 0.8);
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      margin-left: 1rem;
+      background-color: #001F3F;
+      border: 1px solid #7FDBFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #7FDBFF;
+      color: #001F3F;
+    }
+
+    #inputArea {
+      max-width: 600px;
+      margin: 2rem auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      padding: 0.5rem;
+      width: 250px;
+      border: 2px solid #4a4e69;
+      border-radius: 5px;
+      margin-right: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #7FDBFF;
+      outline: none;
+    }
+
+    .notification {
+      color: #7FDBFF;
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .fade-out {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .highlight {
+      background-color: #e0ffe0;
+      transition: background-color 0.5s;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Todo List</h1>
+
+  <div id="notification" class="notification"></div>
+
+  <div id="inputArea">
+    <input id="search" type="text" placeholder="Search todos..." oninput="searchTodos()" />
+    <input id="inp" type="text" placeholder="e.g., Complete assignment" />
+    <button onclick="addTodo()">Add Todo</button>
+    <button onclick="clearInput()">Clear</button>
+  </div>
+
+  <div id="totalTodos" class="notification"></div>
+
+  <!-- Initial Todos -->
+  <div id="todos">
+    <div id="todo-1" class="todo-card">
+      <h4>1. ATTEND ALL LECTURES</h4>
+      <button onclick="editTodo(1)">Edit</button>
+      <button onclick="markDone(1)">Mark Done</button>
+      <button onclick="deleteTodo(1)">Delete</button>
+    </div>
+    <div id="todo-2" class="todo-card">
+      <h4>2. MAKE DINNER</h4>
+      <button onclick="editTodo(2)">Edit</button>
+      <button onclick="markDone(2)">Mark Done</button>
+      <button onclick="deleteTodo(2)">Delete</button>
+    </div>
+  </div>
+
+  <script>
+    let count = 3; 
+    let todos = [
+      { id: 1, text: "ATTEND ALL LECTURES ", done: false },
+      { id: 2, text: "MAKE DINNER", done: false }
+    ];
+
+    function updateTodoCount() {
+      const total = todos.length;
+      const pending = todos.filter(todo => !todo.done).length;
+      document.getElementById("totalTodos").innerText = `Total Todos: ${total}, Pending: ${pending}`;
+    }
+
+    function deleteTodo(index) {
+      const todoElement = document.getElementById("todo-" + index);
+      if (todoElement) {
+        todoElement.classList.add("fade-out");
+        setTimeout(() => {
+          todoElement.parentNode.removeChild(todoElement);
+          todos = todos.filter(todo => todo.id !== index);
+          updateTodoCount();
+          showNotification("Todo deleted!");
+        }, 500);
+      }
+    }
+
+    function addTodo() {
+      const input = document.getElementById("inp");
+      const text = input.value.trim();
+      if (text === "" || todos.some(todo => todo.text.toLowerCase() === text.toLowerCase())) {
+        showNotification("Input cannot be empty or duplicate.");
+        return;
+      }
+
+      // Create new todo object
+      const newTodo = { id: count, text: text, done: false };
+      todos.push(newTodo);
+
+      // Create new todo container
+      const todoDiv = document.createElement("div");
+      todoDiv.id = "todo-" + count;
+      todoDiv.className = "todo-card highlight";
+
+      // Create todo text
+      const h4 = document.createElement("h4");
+      h4.innerText = count + ". " + text;
+
+      // Create edit button
+      const editBtn = document.createElement("button");
+      editBtn.innerText = "Edit";
+      editBtn.onclick = function () {
+        editTodo(count);
+      };
+
+      // Create mark done button
+      const markDoneBtn = document.createElement("button");
+      markDoneBtn.innerText = "Mark Done";
+      markDoneBtn.onclick = function () {
+        markDone(count);
+      };
+
+      // Create delete button
+      const btn = document.createElement("button");
+      btn.innerText = "Delete";
+      btn.onclick = function () {
+        deleteTodo(count);
+      };
+
+      // Append h4 and buttons to div
+      todoDiv.appendChild(h4);
+      todoDiv.appendChild(editBtn);
+      todoDiv.appendChild(markDoneBtn);
+      todoDiv.appendChild(btn);
+
+      // Append new todo to the todos list
+      document.getElementById("todos").appendChild(todoDiv);
+
+      // Clear input
+      input.value = "";
+      updateTodoCount();
+      showNotification("Todo added!");
+
+      // Highlight new addition
+      setTimeout(() => {
+        todoDiv.classList.remove("highlight");
+      }, 1000);
+
+      count++;
+    }
+
+    function editTodo(index) {
+      const todo = todos.find(todo => todo.id === index);
+      if (todo) {
+        const newText = prompt("Edit your todo:", todo.text);
+        if (newText && newText.trim() !== "" && !todos.some(t => t.text.toLowerCase() === newText.toLowerCase())) {
+          todo.text = newText.trim();
+          document.getElementById("todo-" + index).querySelector("h4").innerText = index + ". " + todo.text;
+          showNotification("Todo updated!");
+        } else {
+          showNotification("Input cannot be empty or duplicate.");
+        }
+      }
+    }
+
+    function markDone(index) {
+      const todo = todos.find(todo => todo.id === index);
+      if (todo) {
+        todo.done = !todo.done;
+        const todoDiv = document.getElementById("todo-" + index);
+        todoDiv.classList.toggle("done");
+        showNotification(todo.done ? "Todo marked as done!" : "Todo marked as undone!");
+        updateTodoCount();
+      }
+    }
+
+    function searchTodos() {
+      const searchInput = document.getElementById("search").value.toLowerCase();
+      const todoCards = document.querySelectorAll("#todos > div");
+      todoCards.forEach(card => {
+        const todoText = card.querySelector("h4").innerText.toLowerCase();
+        card.style.display = todoText.includes(searchInput) ? "flex" : "none";
+      });
+    }
+
+    function clearInput() {
+      document.getElementById("inp").value = "";
+      showNotification("Input cleared!");
+    }
+
+    function showNotification(message) {
+      const notification = document.getElementById("notification");
+      notification.innerText = message;
+      setTimeout(() => {
+        notification.innerText = "";
+      }, 3000);
+    }
+
+    // Initial count update
+    updateTodoCount();
+  </script>
+
+</body>
+
+</html>
